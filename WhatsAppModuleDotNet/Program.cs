@@ -1,13 +1,9 @@
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.OpenApi.Models;
 using WhatsAppModuleDotNet.Data;
-using WhatsAppModuleDotNet.Options;
 using WhatsAppModuleDotNet.Services;
 
 var builder = WebApplication.CreateBuilder(args);
-
-builder.Services.Configure<WhatsAppSettings>(builder.Configuration.GetSection("WhatsApp"));
 
 builder.Services.AddSingleton<IWhatsAppRepository, InMemoryWhatsAppRepository>();
 builder.Services.AddSingleton<IWhatsAppApiService, FakeWhatsAppApiService>();
@@ -32,23 +28,12 @@ builder.Services.AddControllers().ConfigureApiBehaviorOptions(options =>
 });
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(options =>
-{
-    options.SwaggerDoc("v1", new OpenApiInfo
-    {
-        Title = "WhatsApp Module API",
-        Version = "v1",
-        Description = "Self-contained reference implementation of WhatsApp Business features."
-    });
-});
+builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
 app.UseSwagger();
-app.UseSwaggerUI(options =>
-{
-    options.SwaggerEndpoint("/swagger/v1/swagger.json", "WhatsApp Module API v1");
-});
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 

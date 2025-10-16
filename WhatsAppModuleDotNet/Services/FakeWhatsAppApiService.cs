@@ -1,7 +1,5 @@
 using System.Text.Json;
-using Microsoft.Extensions.Options;
 using WhatsAppModuleDotNet.Models;
-using WhatsAppModuleDotNet.Options;
 
 namespace WhatsAppModuleDotNet.Services;
 
@@ -11,16 +9,10 @@ namespace WhatsAppModuleDotNet.Services;
 public class FakeWhatsAppApiService : IWhatsAppApiService
 {
     private readonly JsonSerializerOptions _serializerOptions = new(JsonSerializerDefaults.Web);
-    private readonly WhatsAppSettings _settings;
-
-    public FakeWhatsAppApiService(IOptions<WhatsAppSettings> options)
-    {
-        _settings = options.Value;
-    }
 
     public void TestConnection(WhatsAppAccount account)
     {
-        if (account.Token.Length < _settings.MinimumTokenLength)
+        if (account.Token.Length < 10)
         {
             throw new WhatsAppApiException("TokenTooShort", "The provided access token is too short to be realistic.");
         }
@@ -33,10 +25,10 @@ public class FakeWhatsAppApiService : IWhatsAppApiService
             Name = $"welcome_{account.Id}",
             TemplateName = $"welcome_{account.Id}",
             AccountId = account.Id,
-            Category = _settings.DefaultTemplateCategory,
-            Language = _settings.DefaultTemplateLanguage,
+            Category = "UTILITY",
+            Language = "en_US",
             Status = "APPROVED",
-            Body = _settings.DefaultTemplateBody
+            Body = "Hello {{1}}, welcome to our WhatsApp channel!"
         };
 
         template.Components.Add(new TemplateComponent
