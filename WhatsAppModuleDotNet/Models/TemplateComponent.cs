@@ -6,6 +6,6 @@ namespace WhatsAppModuleDotNet.Models;
 public class TemplateComponent
 {
     public required string Type { get; set; }
-    public Dictionary<string, string[]> Parameters { get; set; } = new();
-    public Dictionary<string, string[]>? Example { get; set; }
+    public Dictionary<string, object> Parameters { get; set; } = new();
+    public Dictionary<string, object>? Example { get; set; }
 }

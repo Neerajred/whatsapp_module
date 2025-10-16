@@ -1,8 +1,6 @@
 using System.Linq;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.OpenApi.Models;
 using WhatsAppModuleDotNet.Data;
-using WhatsAppModuleDotNet.Options;
 using WhatsAppModuleDotNet.Services;
 
 var builder = WebApplication.CreateBuilder(args);

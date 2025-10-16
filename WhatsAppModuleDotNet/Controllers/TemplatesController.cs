@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using WhatsAppModuleDotNet.Data;
@@ -75,7 +74,7 @@ public class TemplatesController : ControllerBase
             memoryStream.Position = 0;
             var mediaHandle = _service.UploadMedia(memoryStream, file.FileName);
 
-            headerComponent.Example = new Dictionary<string, string[]>
+            headerComponent.Example = new Dictionary<string, object>
             {
                 ["header_handle"] = new[] { mediaHandle }
             };
