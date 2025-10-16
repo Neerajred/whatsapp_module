@@ -1,5 +1,8 @@
+using System.Collections.Generic;
 using System.Text.Json;
+using Microsoft.Extensions.Options;
 using WhatsAppModuleDotNet.Models;
+using WhatsAppModuleDotNet.Options;
 
 namespace WhatsAppModuleDotNet.Services;
 
@@ -9,10 +12,16 @@ namespace WhatsAppModuleDotNet.Services;
 public class FakeWhatsAppApiService : IWhatsAppApiService
 {
     private readonly JsonSerializerOptions _serializerOptions = new(JsonSerializerDefaults.Web);
+    private readonly WhatsAppSettings _settings;
+
+    public FakeWhatsAppApiService(IOptions<WhatsAppSettings> options)
+    {
+        _settings = options.Value;
+    }
 
     public void TestConnection(WhatsAppAccount account)
     {
-        if (account.Token.Length < 10)
+        if (account.Token.Length < _settings.MinimumTokenLength)
         {
             throw new WhatsAppApiException("TokenTooShort", "The provided access token is too short to be realistic.");
         }
@@ -25,16 +34,16 @@ public class FakeWhatsAppApiService : IWhatsAppApiService
             Name = $"welcome_{account.Id}",
             TemplateName = $"welcome_{account.Id}",
             AccountId = account.Id,
-            Category = "UTILITY",
-            Language = "en_US",
+            Category = _settings.DefaultTemplateCategory,
+            Language = _settings.DefaultTemplateLanguage,
             Status = "APPROVED",
-            Body = "Hello {{1}}, welcome to our WhatsApp channel!"
+            Body = _settings.DefaultTemplateBody
         };
 
         template.Components.Add(new TemplateComponent
         {
             Type = "BODY",
-            Parameters =
+            Parameters = new Dictionary<string, string[]>
             {
                 ["example"] = new[] { "friend" }
             }
@@ -74,7 +83,7 @@ public class FakeWhatsAppApiService : IWhatsAppApiService
                 components = template.Components.Select(component => new
                 {
                     type = component.Type.ToLowerInvariant(),
-                    parameters = component.Parameters.Select(pair => new { type = "text", text = pair.Value.ToString() })
+                    parameters = component.Parameters.SelectMany(pair => pair.Value.Select(value => new { type = "text", text = value }))
                 })
             }
         };
