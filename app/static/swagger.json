@@ -1,0 +1,246 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "WhatsApp Business API Module",
+    "description": "A comprehensive API for managing WhatsApp accounts, templates, and messages.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "/api/whatsapp",
+      "description": "API Base Path"
+    }
+  ],
+  "tags": [
+    { "name": "Authentication", "description": "API authentication" },
+    { "name": "Accounts", "description": "Manage WhatsApp accounts" },
+    { "name": "Templates", "description": "Manage message templates" },
+    { "name": "Messages", "description": "Send messages" }
+  ],
+  "paths": {
+    "/auth/generate_token": {
+      "get": {
+        "tags": ["Authentication"],
+        "summary": "Generate JWT Token",
+        "description": "Generates a temporary JWT for development and testing. This endpoint is unsecured.",
+        "security": [],
+        "responses": {
+          "200": { "$ref": "#/components/responses/TokenResponse" }
+        }
+      }
+    },
+    "/accounts": {
+      "get": {
+        "tags": ["Accounts"],
+        "summary": "Get All Accounts",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": { "$ref": "#/components/responses/AccountListResponse" }
+        }
+      },
+      "post": {
+        "tags": ["Accounts"],
+        "summary": "Create Account",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": { "$ref": "#/components/requestBodies/CreateAccount" },
+        "responses": {
+          "201": { "$ref": "#/components/responses/AccountResponse" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/accounts/{account_id}/test": {
+      "post": {
+        "tags": ["Accounts"],
+        "summary": "Test Account Credentials",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [{ "$ref": "#/components/parameters/AccountId" }],
+        "responses": {
+          "200": { "$ref": "#/components/responses/SuccessMessage" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/accounts/{account_id}/sync_templates": {
+      "post": {
+        "tags": ["Accounts"],
+        "summary": "Sync Templates from Meta",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [{ "$ref": "#/components/parameters/AccountId" }],
+        "responses": {
+          "200": { "$ref": "#/components/responses/SuccessMessage" }
+        }
+      }
+    },
+    "/templates": {
+      "get": {
+        "tags": ["Templates"],
+        "summary": "Get All Templates",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "$ref": "#/components/parameters/FilterAccountId" },
+          { "$ref": "#/components/parameters/FilterStatus" }
+        ],
+        "responses": {
+          "200": { "$ref": "#/components/responses/TemplateListResponse" }
+        }
+      }
+    },
+    "/templates/create": {
+      "post": {
+        "tags": ["Templates"],
+        "summary": "Create Non-Media Template",
+        "description": "Create a template with text-only, a text header, footer, and buttons. Use '?preview=true' to test the payload.",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [{ "$ref": "#/components/parameters/PreviewFlag" }],
+        "requestBody": { "$ref": "#/components/requestBodies/CreateNonMediaTemplate" },
+        "responses": {
+          "200": { "$ref": "#/components/responses/PreviewResponse" },
+          "201": { "$ref": "#/components/responses/TemplateResponse" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" },
+          "500": { "$ref": "#/components/responses/ServerError" }
+        }
+      }
+    },
+    "/templates/create_with_media": {
+      "post": {
+        "tags": ["Templates"],
+        "summary": "Create Template with Media",
+        "description": "Create a template with a media header (image, video, etc.) by uploading a file.",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": { "$ref": "#/components/requestBodies/CreateMediaTemplate" },
+        "responses": {
+          "201": { "$ref": "#/components/responses/TemplateResponse" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/templates/{template_id}": {
+      "delete": {
+        "tags": ["Templates"],
+        "summary": "Delete Template",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [{ "$ref": "#/components/parameters/TemplateId" }],
+        "responses": {
+          "200": { "$ref": "#/components/responses/SuccessMessage" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/messages/send_template": {
+      "post": {
+        "tags": ["Messages"],
+        "summary": "Send Template Message",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": { "$ref": "#/components/requestBodies/SendMessage" },
+        "responses": {
+          "200": { "$ref": "#/components/responses/MessageSentResponse" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http", "scheme": "bearer", "bearerFormat": "JWT"
+      }
+    },
+    "parameters": {
+      "AccountId": { "name": "account_id", "in": "path", "required": true, "schema": { "type": "integer" } },
+      "TemplateId": { "name": "template_id", "in": "path", "required": true, "schema": { "type": "integer" } },
+      "FilterAccountId": { "name": "account_id", "in": "query", "required": false, "schema": { "type": "integer" }, "description": "Filter by account ID" },
+      "FilterStatus": { "name": "status", "in": "query", "required": false, "schema": { "type": "string" }, "description": "Filter by template status" },
+      "PreviewFlag": { "name": "preview", "in": "query", "required": false, "schema": { "type": "boolean" }, "description": "Set to 'true' to generate a payload preview." }
+    },
+    "requestBodies": {
+      "CreateAccount": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "required": ["name", "app_uid", "app_secret", "account_uid", "phone_uid", "token"],
+              "properties": {
+                "name": { "type": "string" }, "app_uid": { "type": "string" }, "app_secret": { "type": "string" },
+                "account_uid": { "type": "string" }, "phone_uid": { "type": "string" }, "token": { "type": "string" }
+              }
+            }
+          }
+        }
+      },
+      "CreateNonMediaTemplate": {
+        "required": true,
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/NonMediaTemplatePayload" } } }
+      },
+      "CreateMediaTemplate": {
+        "required": true,
+        "content": {
+          "multipart/form-data": {
+            "schema": {
+              "type": "object",
+              "required": ["template_data", "file"],
+              "properties": {
+                "template_data": { "type": "string", "description": "A JSON string of the template payload" },
+                "file": { "type": "string", "format": "binary", "description": "Media file for template header" }
+              }
+            }
+          }
+        }
+      },
+      "SendMessage": {
+        "required": true,
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SendMessagePayload" } } }
+      }
+    },
+    "responses": {
+      "SuccessMessage": { "description": "Success", "content": { "application/json": { "schema": { "type": "object", "properties": { "success": { "type": "boolean" }, "message": { "type": "string" } } } } } },
+      "TokenResponse": { "description": "JWT Token", "content": { "application/json": { "schema": { "type": "object", "properties": { "access_token": { "type": "string" } } } } } },
+      "AccountResponse": { "description": "Account details", "content": { "application/json": { "schema": { "type": "object", "properties": { "success": { "type": "boolean" }, "data": { "$ref": "#/components/schemas/Account" } } } } } },
+      "AccountListResponse": { "description": "List of accounts", "content": { "application/json": { "schema": { "type": "object", "properties": { "success": { "type": "boolean" }, "data": { "type": "array", "items": { "$ref": "#/components/schemas/Account" } } } } } } },
+      "TemplateResponse": { "description": "Template details", "content": { "application/json": { "schema": { "type": "object", "properties": { "success": { "type": "boolean" }, "data": { "$ref": "#/components/schemas/Template" } } } } } },
+      "TemplateListResponse": { "description": "List of templates", "content": { "application/json": { "schema": { "type": "object", "properties": { "success": { "type": "boolean" }, "data": { "type": "array", "items": { "$ref": "#/components/schemas/Template" } }, "count": { "type": "integer" } } } } } },
+      "MessageSentResponse": { "description": "Message sent successfully", "content": { "application/json": { "schema": { "type": "object", "properties": { "success": { "type": "boolean" }, "message": { "type": "string" }, "meta_response": { "type": "object" }, "media_refreshed": { "type": "boolean" } } } } } },
+      "PreviewResponse": { "description": "Payload preview", "content": { "application/json": { "schema": { "type": "object", "properties": { "success": { "type": "boolean" }, "message": { "type": "string" }, "payload_preview": { "type": "object" } } } } } },
+      "BadRequest": { "description": "Bad Request", "content": { "application/json": { "schema": { "type": "object", "properties": { "error": { "type": "string" }, "details": { "type": "string" } } } } } },
+      "Unauthorized": { "description": "Unauthorized" },
+      "NotFound": { "description": "Not Found" },
+      "ServerError": { "description": "Internal Server Error" }
+    },
+    "schemas": {
+      "Account": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" }, "name": { "type": "string" }, "app_uid": { "type": "string" }, "account_uid": { "type": "string" }, "phone_uid": { "type": "string" }, "status": { "type": "string" },
+          "created_at": { "type": "string", "format": "date-time" }, "updated_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Template": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" }, "name": { "type": "string" }, "template_name": { "type": "string" }, "status": { "type": "string" }, "category": { "type": "string" }, "language": { "type": "string" },
+          "body": { "type": "string" }, "components": { "type": "object" }, "account_id": { "type": "integer" }, "created_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "NonMediaTemplatePayload": {
+        "type": "object",
+        "required": ["name", "language", "category", "body", "account_id"],
+        "properties": {
+          "name": { "type": "string" }, "language": { "type": "string" }, "category": { "type": "string", "enum": ["MARKETING", "UTILITY", "AUTHENTICATION"] },
+          "account_id": { "type": "integer" }, "body": { "type": "string" }, "footer": { "type": "string" }, "example_body": { "type": "array", "items": { "type": "string" } },
+          "header": { "type": "object", "properties": { "format": { "type": "string", "enum": ["TEXT"] }, "text": { "type": "string" }, "example": { "type": "object", "properties": { "header_text": { "type": "array", "items": { "type": "string" } } } } } },
+          "buttons": { "type": "array", "items": { "type": "object", "properties": { "type": { "type": "string", "enum": ["QUICK_REPLY", "URL", "PHONE_NUMBER"] }, "text": { "type": "string" }, "url": { "type": "string" }, "phone_number": { "type": "string" } } } }
+        }
+      },
+      "SendMessagePayload": {
+        "type": "object",
+        "required": ["account_id", "template_name", "recipient_phone_number"],
+        "properties": {
+          "account_id": { "type": "integer" }, "template_name": { "type": "string" }, "recipient_phone_number": { "type": "string" }, "body_params": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    }
+  }
+}
